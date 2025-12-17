@@ -3,23 +3,19 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-na
 import { Ionicons } from "@expo/vector-icons";
 import MenuPopup from "./menu";
 
-const Header = ({ title, navigation }) => {
+const Header = ({ title, navigation, onLogout }) => {
   const [menuVisible, setMenuVisible] = useState(false);
-
-  const handleMenuPress = () => setMenuVisible(true);
-  const handleClose = () => setMenuVisible(false);
-
-  const handleNavigate = (screen) => {
-    setMenuVisible(false);
-    navigation.navigate(screen);
-  };
+  
 
   return (
     <SafeAreaView>
       <View style={styles.header}>
         
         {/* 🍔 MENU BUTTON */}
-        <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
+        <TouchableOpacity
+          onPress={() => setMenuVisible(true)}
+          style={styles.menuButton}
+        >
           <Ionicons name="menu" size={30} color="#fff" />
         </TouchableOpacity>
 
@@ -35,14 +31,19 @@ const Header = ({ title, navigation }) => {
       {/* POPUP MENU */}
       <MenuPopup
         visible={menuVisible}
-        onClose={handleClose}
-        onNavigate={handleNavigate}
+        onClose={() => setMenuVisible(false)}
+        onNavigate={(screen) => {
+          setMenuVisible(false);
+          navigation.navigate(screen);
+        }}
+        onLogout={onLogout}   // 🔥 NEW
       />
     </SafeAreaView>
   );
 };
 
 export default Header;
+
 
 const styles = StyleSheet.create({
   header: {

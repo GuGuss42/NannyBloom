@@ -1,46 +1,82 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import RatingScreen from "../screens/RatingScreen";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Screens
+import LoginScreen from "../screens/LoginScreen";
+import SignupScreen from "../screens/SignupScreen";
+import NannyHome from "../screens/NannyHome";
 
-import HomeScreen from "../screens/HomeScreen";
-import NannyListScreen from "../screens/NannyListScreen";
-import MessagesScreen from "../screens/MessagesScreen";
-import BookingScreen from "../screens/BookingScreen";
-import SignupScreen from "../screens/SignupScreen"
+// Navigators
+import ParentTabs from "./ParentsTabs";
 
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🔍 Check stored session
+  const checkUserSession = async () => {
+    try {
+      const session = await AsyncStorage.getItem("userSession");
+
+      if (session) {
+        const user = JSON.parse(session);
+        setUserRole(user.role);
+        setIsLoggedIn(true);
+        console.log("✅ Session found:", user);
+      } else {
+        setUserRole(null);
+        setIsLoggedIn(false);
+        console.log("❌ No session found");
+      }
+    } catch (error) {
+      console.error("❌ Session check error:", error);
+      setIsLoggedIn(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkUserSession();
+  }, []);
+
+  if (loading) return null;
+
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: "#16a085",
-          tabBarInactiveTintColor: "#aaa",
-          tabBarStyle: { paddingBottom: 5, height: 60 },
-          tabBarIcon: ({ color, size }) => {
-            let icon;
-            if (route.name === "Home") icon = "home-outline";
-            else if (route.name === "Nannies") icon = "people-outline";
-            else if (route.name === "Bookings") icon = "calendar-outline";
-            else if (route.name === "Messages") icon = "chatbubbles-outline";
-            else if (route.name === "Account") icon = "person-outline";
-            return <Ionicons name={icon} size={size} color={color} />;
-          },
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Nannies" component={NannyListScreen} />
-        <Tab.Screen name="Bookings" component={BookingScreen} />
-        <Tab.Screen name="Messages" component={MessagesScreen} />
-        <Tab.Screen name="Account" component={SignupScreen} />
-        <Tab.Screen name="Rate" component={RatingScreen} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {/* 🔐 NOT LOGGED IN */}
+        {!isLoggedIn && (
+          <>
+            <Stack.Screen name="Login">
+              {(props) => (
+                <LoginScreen {...props} onLogin={checkUserSession} />
+              )}
+            </Stack.Screen>
 
-      </Tab.Navigator>
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </>
+        )}
+
+        {/* 👨‍👩‍👧 PARENT FLOW */}
+        {isLoggedIn && userRole === "parent" && (
+          <Stack.Screen name="ParentTabs" component={ParentTabs} />
+        )}
+
+        {/* 👶 NANNY FLOW */}
+        {isLoggedIn && userRole === "babysitter" && (
+          <Stack.Screen name="NannyHome">
+            {(props) => (
+              <NannyHome {...props} onLogout={checkUserSession} />
+            )}
+          </Stack.Screen>
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

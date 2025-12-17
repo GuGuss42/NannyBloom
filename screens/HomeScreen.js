@@ -28,7 +28,14 @@ export default function HomeScreen() {
 
     loadTopNannies();
   }, []);
-
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('userSession');
+      navigation.replace("LoginScreen");
+    } catch (error) {
+      console.error("Logout error:", error.message);
+    }
+  };
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -108,8 +115,11 @@ export default function HomeScreen() {
           <Text style={styles.featureText}>
             Message your nanny instantly and safely.
           </Text>
+
         </View>
+        
       </ScrollView>
+          
     </SafeAreaView>
   );
 }
