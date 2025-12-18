@@ -70,15 +70,19 @@ export default function NannyHome({ onLogout }) {
 
   // ✅ Real Firebase logout
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      await AsyncStorage.removeItem("userSession");
-      console.log("✅ Logged out");
-      onLogout();
-    } catch (e) {
-      Alert.alert("Error", "Could not logout");
-    }
-  };
+  console.log("🚪 Logout button pressed");
+
+  try {
+    await AsyncStorage.removeItem("userSession");
+    await AsyncStorage.clear(); // optional
+    console.log("✅ Logged out (local session cleared)");
+    onLogout();
+  } catch (e) {
+    console.log("❌ Logout error:", e);
+    Alert.alert("Error", "Could not logout");
+  }
+};
+
 
   const handleAccept = (id) => {
     Alert.alert("✅ Accepted", "You accepted the offer");
